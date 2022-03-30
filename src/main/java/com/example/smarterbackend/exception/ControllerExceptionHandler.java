@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@ControllerAdvice
 public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(
@@ -34,25 +36,34 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @ExceptionHandler(NoContentException.class)
-  public ErrorMessage noContentException(Exception exception) {
-    return new ErrorMessage(exception.getMessage());
+  public ResponseEntity<ErrorMessage> noContentException(Exception exception) {
+    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.NO_CONTENT);
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ExceptionHandler({InvalidRequestException.class})
-  public ErrorMessage badRequestException(Exception exception) {
-    return new ErrorMessage(exception.getMessage());
+  @ExceptionHandler({InvalidRequestException.class, OtpException.class})
+  public ResponseEntity<ErrorMessage> badRequestException(Exception exception) {
+    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.BAD_REQUEST);
+  }
+
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  @ExceptionHandler(ForbiddenException.class)
+  public ResponseEntity<ErrorMessage> forbiddenException(Exception exception) {
+    if (exception.getMessage() == null) {
+      return null;
+    }
+    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.FORBIDDEN);
   }
 
   @ResponseStatus(HttpStatus.NOT_FOUND)
   @ExceptionHandler(NotFoundException.class)
-  public ErrorMessage notFoundException(Exception exception) {
-    return new ErrorMessage(exception.getMessage());
+  public ResponseEntity<ErrorMessage> notFoundException(Exception exception) {
+    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.NOT_FOUND);
   }
 
   @ResponseStatus(HttpStatus.CONFLICT)
   @ExceptionHandler({ResourceConflictException.class})
-  public ErrorMessage resourceConflictException(Exception exception) {
-    return new ErrorMessage(exception.getMessage());
+  public ResponseEntity<ErrorMessage> resourceConflictException(Exception exception) {
+    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.CONFLICT);
   }
 }

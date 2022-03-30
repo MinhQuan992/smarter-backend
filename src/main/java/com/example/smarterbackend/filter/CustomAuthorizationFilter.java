@@ -1,16 +1,16 @@
 package com.example.smarterbackend.filter;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.smarterbackend.framework.common.constant.SecurityConstants;
+import com.example.smarterbackend.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -18,47 +18,42 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
+@RequiredArgsConstructor
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
+  private final UserDetailsService userDetailsService;
+
   @Override
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    if (request.getServletPath().equals(SecurityConstants.LOG_IN_URL)
-        || request.getServletPath().equals(SecurityConstants.SIGN_UP_URL)) {
-      filterChain.doFilter(request, response);
-    } else {
-      String authorizationHeader = request.getHeader(SecurityConstants.HEADER_STRING);
-      if (authorizationHeader != null
-          && authorizationHeader.startsWith(SecurityConstants.TOKEN_PREFIX)) {
-        try {
-          String token = authorizationHeader.substring(SecurityConstants.TOKEN_PREFIX.length());
-          Algorithm algorithm = Algorithm.HMAC256(SecurityConstants.SECRET.getBytes());
-          JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-          DecodedJWT decodedJWT = jwtVerifier.verify(token);
+    String authorizationHeader = request.getHeader(SecurityConstants.HEADER_STRING);
 
-          String username = decodedJWT.getSubject();
-          String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
+    if (authorizationHeader != null
+        && authorizationHeader.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+      try {
+        String token = authorizationHeader.substring(SecurityConstants.TOKEN_PREFIX.length());
+        String username = JwtUtil.getUsernameFromJwt(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-          Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-          Arrays.stream(roles).forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
+        UsernamePasswordAuthenticationToken authenticationToken =
+            new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-          UsernamePasswordAuthenticationToken authenticationToken =
-              new UsernamePasswordAuthenticationToken(username, null, authorities);
-          SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+      } catch (Exception exception) {
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-          filterChain.doFilter(request, response);
-        } catch (Exception exception) {
-          response.setStatus(HttpStatus.FORBIDDEN.value());
-          Map<String, String> error = new HashMap<>();
-          error.put("message", exception.getMessage());
-          response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-          new ObjectMapper().writeValue(response.getOutputStream(), error);
-        }
-      } else {
-        filterChain.doFilter(request, response);
+        Map<String, String> error = new HashMap<>();
+        error.put("message", exception.getMessage());
+
+        new ObjectMapper().writeValue(response.getOutputStream(), error);
       }
     }
+    filterChain.doFilter(request, response);
   }
 }
