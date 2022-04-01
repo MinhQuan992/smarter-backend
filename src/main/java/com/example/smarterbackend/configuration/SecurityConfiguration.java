@@ -54,7 +54,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .exceptionHandling()
         .and()
         .authorizeRequests()
-        .antMatchers("/authentication/login", "/users/signup", "/users/signup/verify")
+        .antMatchers(
+            "/authentication/login",
+            "/users/signup",
+            "/users/signup/verify",
+            "/docs/**")
         .permitAll()
         .antMatchers("/admin/**")
         .hasRole(Role.ADMIN.name())
@@ -62,8 +66,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .authenticated()
         .and()
         .addFilterBefore(
-            new CustomAuthorizationFilter(),
-            UsernamePasswordAuthenticationFilter.class);
+            new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
   }
 
   @Bean

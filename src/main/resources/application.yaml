@@ -30,6 +30,6 @@ server:
   port: ${BASE_PORT:8080}
 springdoc:
   swagger-ui:
-    path: /smarter/api/v1/swagger-ui.html
+    path: /docs/swagger-ui.html
   api-docs:
-    path: /smarter/api/v1/docs
+    path: /docs/api-docs
