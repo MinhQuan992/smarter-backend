@@ -4,7 +4,7 @@ import com.example.smarterbackend.framework.common.constant.SecurityConstants;
 import com.example.smarterbackend.framework.dto.authentication.AuthenticationResponse;
 import com.example.smarterbackend.framework.dto.authentication.CredentialPayload;
 import com.example.smarterbackend.model.User;
-import com.example.smarterbackend.util.JwtUtil;
+import com.example.smarterbackend.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +23,7 @@ public class AuthenticationService {
             new UsernamePasswordAuthenticationToken(payload.getEmail(), payload.getPassword()));
     SecurityContextHolder.getContext().setAuthentication(authentication);
     User user = (User) authentication.getPrincipal();
-    String accessToken = JwtUtil.generateJwt(user);
+    String accessToken = JwtUtils.generateJwt(user);
 
     return new AuthenticationResponse(accessToken, SecurityConstants.EXPIRATION_TIME);
   }

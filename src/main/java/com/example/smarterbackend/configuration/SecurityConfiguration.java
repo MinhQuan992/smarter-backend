@@ -62,7 +62,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .authenticated()
         .and()
         .addFilterBefore(
-            new CustomAuthorizationFilter(userDetailsService),
+            new CustomAuthorizationFilter(),
             UsernamePasswordAuthenticationFilter.class);
   }
 
