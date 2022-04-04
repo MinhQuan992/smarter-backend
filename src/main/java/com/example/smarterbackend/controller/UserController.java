@@ -6,6 +6,7 @@ import com.example.smarterbackend.framework.dto.user.UserSignUpWithOtpPayload;
 import com.example.smarterbackend.framework.dto.user.UserSignUpWithoutOtpPayload;
 import com.example.smarterbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +22,6 @@ public class UserController implements UserAPI {
 
   @Override
   public ResponseEntity<UserResponse> signUpWithOtp(UserSignUpWithOtpPayload payload) {
-    return ResponseEntity.ok(userService.addNewUser(payload));
+    return new ResponseEntity<>(userService.addNewUser(payload), HttpStatus.CREATED);
   }
 }
