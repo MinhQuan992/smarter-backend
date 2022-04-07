@@ -5,8 +5,9 @@ import com.example.smarterbackend.exception.OtpException;
 import com.example.smarterbackend.exception.ResourceConflictException;
 import com.example.smarterbackend.framework.common.data.Role;
 import com.example.smarterbackend.framework.dto.user.UserResponse;
-import com.example.smarterbackend.framework.dto.user.UserSignUpWithOtpPayload;
-import com.example.smarterbackend.framework.dto.user.UserSignUpWithoutOtpPayload;
+import com.example.smarterbackend.framework.dto.user.AddUserPayload;
+import com.example.smarterbackend.framework.dto.user.VerificationResponse;
+import com.example.smarterbackend.framework.dto.user.VerifyInfoPayload;
 import com.example.smarterbackend.mapper.UserMapper;
 import com.example.smarterbackend.model.Authority;
 import com.example.smarterbackend.model.Mail;
@@ -18,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -30,10 +33,9 @@ public class UserService {
   private final MailService mailService;
   private final PasswordEncoder passwordEncoder;
 
-  public UserResponse validateInfoAndGenerateOTP(UserSignUpWithoutOtpPayload payload) {
+  public VerificationResponse verifyInfoAndGenerateOTP(VerifyInfoPayload payload) {
     String name = payload.getName();
     String email = payload.getEmail();
-    String password = payload.getPassword();
 
     validateEmail(email);
     int otp = otpService.generateOTP(email);
@@ -54,9 +56,12 @@ public class UserService {
     sendMail(email, mailSubject, mailContent);
     log.info("OTP is " + otp);
 
-    User user =
-        User.builder().name(name).email(email).password(passwordEncoder.encode(password)).build();
-    return UserMapper.INSTANCE.userToUserDTO(user);
+    VerificationResponse response = new VerificationResponse();
+    Map<String, Boolean> properties = new HashMap<>();
+    properties.put("isInfoValid", true);
+    response.setProperties(properties);
+
+    return response;
   }
 
   private void validateEmail(String email) {
@@ -77,7 +82,7 @@ public class UserService {
     mailService.sendEmail(mail);
   }
 
-  public UserResponse addNewUser(UserSignUpWithOtpPayload payload) {
+  public UserResponse addUser(AddUserPayload payload) {
     int inputOtp = Integer.parseInt(payload.getOtp());
     int serverOtp = otpService.getOtp(payload.getEmail());
     if (serverOtp > 0) {

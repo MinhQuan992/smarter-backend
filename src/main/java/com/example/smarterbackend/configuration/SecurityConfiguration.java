@@ -56,8 +56,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
         .antMatchers(
             "/authentication/login",
-            "/users/signup",
-            "/users/signup/verify",
+            "/users/signup/**",
             "/docs/**")
         .permitAll()
         .antMatchers("/admin/**")

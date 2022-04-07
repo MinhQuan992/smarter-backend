@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserSignUpWithOtpPayload {
+public class AddUserPayload {
   @NotBlank(message = "The name is required")
   @Size(max = 100, message = "The length of the name must not be greater than 100 characters")
   private String name;

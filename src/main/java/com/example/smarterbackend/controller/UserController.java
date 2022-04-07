@@ -2,8 +2,9 @@ package com.example.smarterbackend.controller;
 
 import com.example.smarterbackend.framework.api.UserAPI;
 import com.example.smarterbackend.framework.dto.user.UserResponse;
-import com.example.smarterbackend.framework.dto.user.UserSignUpWithOtpPayload;
-import com.example.smarterbackend.framework.dto.user.UserSignUpWithoutOtpPayload;
+import com.example.smarterbackend.framework.dto.user.AddUserPayload;
+import com.example.smarterbackend.framework.dto.user.VerificationResponse;
+import com.example.smarterbackend.framework.dto.user.VerifyInfoPayload;
 import com.example.smarterbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,12 @@ public class UserController implements UserAPI {
   private final UserService userService;
 
   @Override
-  public ResponseEntity<UserResponse> signUpWithoutOtp(UserSignUpWithoutOtpPayload payload) {
-    return ResponseEntity.ok(userService.validateInfoAndGenerateOTP(payload));
+  public ResponseEntity<VerificationResponse> verifyInfo(VerifyInfoPayload payload) {
+    return ResponseEntity.ok(userService.verifyInfoAndGenerateOTP(payload));
   }
 
   @Override
-  public ResponseEntity<UserResponse> signUpWithOtp(UserSignUpWithOtpPayload payload) {
-    return new ResponseEntity<>(userService.addNewUser(payload), HttpStatus.CREATED);
+  public ResponseEntity<UserResponse> addUser(AddUserPayload payload) {
+    return new ResponseEntity<>(userService.addUser(payload), HttpStatus.CREATED);
   }
 }
