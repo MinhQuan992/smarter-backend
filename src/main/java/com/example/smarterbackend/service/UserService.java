@@ -36,10 +36,12 @@ public class UserService {
   public VerificationResponse verifyInfoAndGenerateOTP(VerifyInfoPayload payload) {
     String name = payload.getName();
     String email = payload.getEmail();
+    log.info("Started verifying info of user {}, email {}", name, email);
 
     validateEmail(email);
     int otp = otpService.generateOTP(email);
 
+    log.info("Sending email to {}", email);
     String mailSubject = "Smarter | Verification Code to Sign Up";
     String mailContent =
         "<!DOCTYPE html><html><head><style>p, h2 {font-family: sans-serif;}</style></head>\n"
@@ -54,7 +56,8 @@ public class UserService {
             + "<p>Thanks for joining Smarter! We hope you will enjoy great moments with us!</p>\n"
             + "<p style=\"font-weight: bold;\">The Smarter Team</p></body></html>";
     sendMail(email, mailSubject, mailContent);
-    log.info("OTP is " + otp);
+    log.info("Sent email to {} successfully", email);
+    log.info("Generated OTP: {}", otp);
 
     VerificationResponse response = new VerificationResponse();
     Map<String, Boolean> properties = new HashMap<>();
@@ -67,7 +70,8 @@ public class UserService {
   private void validateEmail(String email) {
     Optional<User> userOptional = userRepository.findUsersByEmail(email);
     if (userOptional.isPresent()) {
-      throw new ResourceConflictException("This email is already taken");
+      log.error("The email {} is already taken", email);
+      throw new ResourceConflictException("Email này đã được sử dụng");
     }
   }
 
@@ -83,11 +87,13 @@ public class UserService {
   }
 
   public UserResponse addUser(AddUserPayload payload) {
+    log.info("Started verifying info of user {} again", payload.getEmail());
     int inputOtp = Integer.parseInt(payload.getOtp());
     int serverOtp = otpService.getOtp(payload.getEmail());
     if (serverOtp > 0) {
       if (inputOtp != serverOtp) {
-        throw new OtpException("This code is wrong. Please try again");
+        log.error("The OTP {} is wrong", inputOtp);
+        throw new OtpException("Mã OTP sai. Mời bạn thử lại!");
       }
 
       String name = payload.getName();
@@ -103,10 +109,11 @@ public class UserService {
               .orElseThrow(() -> new NotFoundException("Authority not found"));
       user.setAuthority(authority);
       otpService.clearOTP(payload.getEmail());
-
+      log.info("All info is valid. Adding user {} to database", email);
       return UserMapper.INSTANCE.userToUserDTO(userRepository.save(user));
     } else {
-      throw new OtpException("This code is expired. Please get a new code");
+      log.error("The OTP is expired");
+      throw new OtpException("Mã OTP đã hết hạn. Mời bạn lấy một mã khác!");
     }
   }
 }
