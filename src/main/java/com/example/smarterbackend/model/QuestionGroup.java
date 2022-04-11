@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -20,7 +21,7 @@ public class QuestionGroup {
   @Column(nullable = false)
   private String name;
 
-  @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
   private List<Question> questions;
 
   public void addQuestion(Question question) {
@@ -40,5 +41,18 @@ public class QuestionGroup {
       question.setGroup(null);
       iterator.remove();
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    QuestionGroup that = (QuestionGroup) o;
+    return id.equals(that.id) && name.equals(that.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, name);
   }
 }

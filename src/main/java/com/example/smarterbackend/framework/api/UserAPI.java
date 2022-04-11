@@ -6,6 +6,7 @@ import com.example.smarterbackend.framework.dto.user.VerificationResponse;
 import com.example.smarterbackend.framework.dto.user.VerifyInfoPayload;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,4 +22,7 @@ public interface UserAPI {
 
   @PostMapping("/signup/add-user")
   ResponseEntity<UserResponse> addUser(@Valid @RequestBody AddUserPayload payload);
+
+  @GetMapping("/current-user")
+  ResponseEntity<UserResponse> getCurrentUser();
 }

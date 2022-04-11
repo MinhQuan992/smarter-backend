@@ -14,6 +14,7 @@ import com.example.smarterbackend.model.Mail;
 import com.example.smarterbackend.model.User;
 import com.example.smarterbackend.repository.AuthorityRepository;
 import com.example.smarterbackend.repository.UserRepository;
+import com.example.smarterbackend.util.UserUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -115,5 +116,16 @@ public class UserService {
       log.error("The OTP is expired");
       throw new OtpException("Mã OTP đã hết hạn. Mời bạn lấy một mã khác!");
     }
+  }
+
+  public UserResponse getCurrentUserDTO() {
+    return UserMapper.INSTANCE.userToUserDTO(getCurrentUser());
+  }
+
+  private User getCurrentUser() {
+    String email = UserUtils.getCurrentUserEmail();
+    return userRepository
+        .findUsersByEmail(email)
+        .orElseThrow(() -> new NotFoundException("User not found"));
   }
 }

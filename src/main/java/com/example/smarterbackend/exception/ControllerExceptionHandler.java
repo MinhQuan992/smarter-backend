@@ -36,8 +36,8 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @ExceptionHandler(NoContentException.class)
-  public ResponseEntity<ErrorMessage> noContentException(Exception exception) {
-    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.NO_CONTENT);
+  public ResponseEntity<ErrorMessage> noContentException() {
+    return new ResponseEntity<>(new ErrorMessage(), HttpStatus.NO_CONTENT);
   }
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)

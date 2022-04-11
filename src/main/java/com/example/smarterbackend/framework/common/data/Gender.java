@@ -6,7 +6,7 @@ public enum Gender {
   MALE,
   FEMALE;
 
-  private Gender fromGenderString(String genderString) {
+  public static Gender fromGenderString(String genderString) {
     switch (genderString) {
       case "male" -> {
         return MALE;

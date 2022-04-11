@@ -25,4 +25,9 @@ public class UserController implements UserAPI {
   public ResponseEntity<UserResponse> addUser(AddUserPayload payload) {
     return new ResponseEntity<>(userService.addUser(payload), HttpStatus.CREATED);
   }
+
+  @Override
+  public ResponseEntity<UserResponse> getCurrentUser() {
+    return ResponseEntity.ok(userService.getCurrentUserDTO());
+  }
 }

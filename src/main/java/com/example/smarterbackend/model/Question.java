@@ -2,6 +2,7 @@ package com.example.smarterbackend.model;
 
 import com.example.smarterbackend.framework.common.data.Answer;
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -38,6 +39,7 @@ public class Question {
   private String imageUrl;
 
   @Column(nullable = false)
+  @Type(type = "text")
   private String information;
 
   @Column(nullable = false)

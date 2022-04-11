@@ -11,6 +11,8 @@ public class ErrorMessage {
   private UUID id = UUID.randomUUID();
   private String message;
 
+  public ErrorMessage() {}
+
   public ErrorMessage(String message) {
     this.message = message;
   }
