@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -48,6 +49,9 @@ public class Question {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "group_id")
   private QuestionGroup group;
+
+  @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<UserQuestion> users;
 
   @Override
   public boolean equals(Object o) {

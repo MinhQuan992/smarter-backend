@@ -3,7 +3,7 @@ package com.example.smarterbackend.controller;
 import com.example.smarterbackend.framework.api.UserAPI;
 import com.example.smarterbackend.framework.dto.user.UserResponse;
 import com.example.smarterbackend.framework.dto.user.AddUserPayload;
-import com.example.smarterbackend.framework.dto.user.VerificationResponse;
+import com.example.smarterbackend.framework.dto.DynamicResponse;
 import com.example.smarterbackend.framework.dto.user.VerifyInfoPayload;
 import com.example.smarterbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class UserController implements UserAPI {
   private final UserService userService;
 
   @Override
-  public ResponseEntity<VerificationResponse> verifyInfo(VerifyInfoPayload payload) {
+  public ResponseEntity<DynamicResponse> verifyInfo(VerifyInfoPayload payload) {
     return ResponseEntity.ok(userService.verifyInfoAndGenerateOTP(payload));
   }
 

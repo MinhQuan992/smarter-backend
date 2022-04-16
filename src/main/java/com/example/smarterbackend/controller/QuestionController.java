@@ -1,6 +1,7 @@
 package com.example.smarterbackend.controller;
 
 import com.example.smarterbackend.framework.api.QuestionAPI;
+import com.example.smarterbackend.framework.dto.DynamicResponse;
 import com.example.smarterbackend.framework.dto.question.*;
 import com.example.smarterbackend.service.QuestionService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,28 @@ public class QuestionController implements QuestionAPI {
   }
 
   @Override
+  public ResponseEntity<QuestionResponse> getRandomQuestion() {
+    return ResponseEntity.ok(questionService.getRandomQuestion());
+  }
+
+  @Override
   public ResponseEntity<CheckAnswerResponse> checkAnswer(
       String questionId, CheckAnswerPayload payload) {
     return ResponseEntity.ok(questionService.checkAnswer(questionId, payload));
+  }
+
+  @Override
+  public ResponseEntity<List<UserQuestionResponse>> getQuestionsByGroupForUser(String groupId) {
+    return ResponseEntity.ok(questionService.getQuestionsByGroupForUser(groupId));
+  }
+
+  @Override
+  public ResponseEntity<DynamicResponse> setFavorite(String questionId, SetFavoritePayload payload) {
+    return ResponseEntity.ok(questionService.setFavorite(questionId, payload));
+  }
+
+  @Override
+  public ResponseEntity<List<UserQuestionResponse>> getFavoriteQuestionsForUser() {
+    return ResponseEntity.ok(questionService.getFavoriteQuestionsForUser());
   }
 }

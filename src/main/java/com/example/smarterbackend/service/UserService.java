@@ -6,7 +6,7 @@ import com.example.smarterbackend.exception.ResourceConflictException;
 import com.example.smarterbackend.framework.common.data.Role;
 import com.example.smarterbackend.framework.dto.user.UserResponse;
 import com.example.smarterbackend.framework.dto.user.AddUserPayload;
-import com.example.smarterbackend.framework.dto.user.VerificationResponse;
+import com.example.smarterbackend.framework.dto.DynamicResponse;
 import com.example.smarterbackend.framework.dto.user.VerifyInfoPayload;
 import com.example.smarterbackend.mapper.UserMapper;
 import com.example.smarterbackend.model.Authority;
@@ -34,7 +34,7 @@ public class UserService {
   private final MailService mailService;
   private final PasswordEncoder passwordEncoder;
 
-  public VerificationResponse verifyInfoAndGenerateOTP(VerifyInfoPayload payload) {
+  public DynamicResponse verifyInfoAndGenerateOTP(VerifyInfoPayload payload) {
     String name = payload.getName();
     String email = payload.getEmail();
     log.info("Started verifying info of user {}, email {}", name, email);
@@ -60,7 +60,7 @@ public class UserService {
     log.info("Sent email to {} successfully", email);
     log.info("Generated OTP: {}", otp);
 
-    VerificationResponse response = new VerificationResponse();
+    DynamicResponse response = new DynamicResponse();
     Map<String, Boolean> properties = new HashMap<>();
     properties.put("isInfoValid", true);
     response.setProperties(properties);
@@ -122,7 +122,7 @@ public class UserService {
     return UserMapper.INSTANCE.userToUserDTO(getCurrentUser());
   }
 
-  private User getCurrentUser() {
+  public User getCurrentUser() {
     String email = UserUtils.getCurrentUserEmail();
     return userRepository
         .findUsersByEmail(email)

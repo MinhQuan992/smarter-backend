@@ -59,7 +59,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .permitAll()
         .antMatchers(HttpMethod.POST, "/question-groups", "/questions")
         .hasAuthority(Role.ADMIN.name())
-        .antMatchers(HttpMethod.PUT, "/questions/**")
+        .antMatchers(HttpMethod.PUT, "/questions/update-question/**")
         .hasAuthority(Role.ADMIN.name())
         .anyRequest()
         .authenticated()

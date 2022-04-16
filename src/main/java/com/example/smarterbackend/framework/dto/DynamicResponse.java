@@ -1,4 +1,4 @@
-package com.example.smarterbackend.framework.dto.user;
+package com.example.smarterbackend.framework.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +11,6 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class VerificationResponse {
+public class DynamicResponse {
   private Map<String, ?> properties;
 }
