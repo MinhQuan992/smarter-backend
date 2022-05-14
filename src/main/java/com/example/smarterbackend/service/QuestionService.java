@@ -177,6 +177,58 @@ public class QuestionService {
     return QuestionMapper.INSTANCE.questionToQuestionDTO(questions.get(randomIndex));
   }
 
+  public QuestionResponse getNextQuestionInGroup(String currentQuestionId, boolean getCurrent) {
+    Question question =
+        questionRepository
+            .findById(Long.parseLong(currentQuestionId))
+            .orElseThrow(() -> new NotFoundException("Question not found"));
+
+    if (getCurrent) {
+      log.info("Getting question in group, question ID: {}", currentQuestionId);
+      return QuestionMapper.INSTANCE.questionToQuestionDTO(question);
+    }
+
+    log.info("Getting next question in group, current question ID: {}", currentQuestionId);
+    List<Question> questions = question.getGroup().getQuestions();
+    int nextQuestionIndex = getNextQuestionIndex(question, questions);
+    return QuestionMapper.INSTANCE.questionToQuestionDTO(questions.get(nextQuestionIndex));
+  }
+
+  public QuestionResponse getNextFavoriteQuestionOfCurrentUser(
+      String currentQuestionId, boolean getCurrent) {
+    User currentUser = userService.getCurrentUser();
+    List<Question> favoriteQuestions = userQuestionRepository.getFavoriteQuestions(currentUser);
+    if (favoriteQuestions.isEmpty()) {
+      throw new InvalidRequestException("This user hasn't had any favorite questions");
+    }
+
+    Question question =
+        questionRepository
+            .findById(Long.parseLong(currentQuestionId))
+            .orElseThrow(() -> new NotFoundException("Question not found"));
+
+    if (!favoriteQuestions.contains(question)) {
+      throw new InvalidRequestException(
+          "This question is not in the user's favorite question list");
+    }
+
+    if (getCurrent) {
+      log.info("Getting question in favorite question list, question ID: {}", currentQuestionId);
+      return QuestionMapper.INSTANCE.questionToQuestionDTO(question);
+    }
+
+    log.info(
+        "Getting next question in favorite question list, current question ID: {}",
+        currentQuestionId);
+    int nextQuestionIndex = getNextQuestionIndex(question, favoriteQuestions);
+    return QuestionMapper.INSTANCE.questionToQuestionDTO(favoriteQuestions.get(nextQuestionIndex));
+  }
+
+  private int getNextQuestionIndex(Question question, List<Question> questions) {
+    int questionIndexInList = questions.indexOf(question);
+    return (questionIndexInList == questions.size() - 1) ? 0 : questionIndexInList + 1;
+  }
+
   public CheckAnswerResponse checkAnswer(String questionId, CheckAnswerPayload payload) {
     log.info("Checking answer for question, ID {}", questionId);
     Question question = findQuestionById(questionId);

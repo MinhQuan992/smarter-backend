@@ -14,5 +14,8 @@ public interface UserQuestionRepository extends JpaRepository<UserQuestion, User
   @Query("SELECT uq.question FROM UserQuestion uq WHERE uq.user = :user")
   List<Question> getAnsweredQuestions(@Param("user") User user);
 
+  @Query("SELECT uq.question FROM UserQuestion uq WHERE uq.user = :user AND uq.isFavorite = true")
+  List<Question> getFavoriteQuestions(@Param("user") User user);
+
   List<UserQuestion> findAllByIsFavoriteIsTrueAndUserEquals(User user);
 }

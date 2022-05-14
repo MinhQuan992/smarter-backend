@@ -43,6 +43,19 @@ public class QuestionController implements QuestionAPI {
   }
 
   @Override
+  public ResponseEntity<QuestionResponse> getNextQuestionInGroup(
+      String currentQuestionId, boolean getCurrent) {
+    return ResponseEntity.ok(questionService.getNextQuestionInGroup(currentQuestionId, getCurrent));
+  }
+
+  @Override
+  public ResponseEntity<QuestionResponse> getNextFavoriteQuestion(
+      String currentQuestionId, boolean getCurrent) {
+    return ResponseEntity.ok(
+        questionService.getNextFavoriteQuestionOfCurrentUser(currentQuestionId, getCurrent));
+  }
+
+  @Override
   public ResponseEntity<CheckAnswerResponse> checkAnswer(
       String questionId, CheckAnswerPayload payload) {
     return ResponseEntity.ok(questionService.checkAnswer(questionId, payload));
@@ -54,7 +67,8 @@ public class QuestionController implements QuestionAPI {
   }
 
   @Override
-  public ResponseEntity<DynamicResponse> setFavorite(String questionId, SetFavoritePayload payload) {
+  public ResponseEntity<DynamicResponse> setFavorite(
+      String questionId, SetFavoritePayload payload) {
     return ResponseEntity.ok(questionService.setFavorite(questionId, payload));
   }
 

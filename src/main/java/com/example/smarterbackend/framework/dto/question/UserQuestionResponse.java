@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class UserQuestionResponse {
   private Long questionId;
   private String shortContent;
+  private String imageUrl;
   private boolean isAnswered;
   private boolean isAnswerCorrect;
   private boolean isFavorite;

@@ -49,6 +49,26 @@ public interface QuestionAPI {
   @GetMapping("/random-question")
   ResponseEntity<QuestionResponse> getRandomQuestion();
 
+  @GetMapping("/next-question")
+  ResponseEntity<QuestionResponse> getNextQuestionInGroup(
+      @RequestParam("currentQuestionId")
+          @NotBlank(message = "The current question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The current question ID must contain numeric characters only")
+          String currentQuestionId,
+      @RequestParam("getCurrent") boolean getCurrent);
+
+  @GetMapping("/next-favorite-question")
+  ResponseEntity<QuestionResponse> getNextFavoriteQuestion(
+      @RequestParam("currentQuestionId")
+          @NotBlank(message = "The current question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The current question ID must contain numeric characters only")
+          String currentQuestionId,
+      @RequestParam("getCurrent") boolean getCurrent);
+
   @PostMapping("/check-answer/{questionId}")
   ResponseEntity<CheckAnswerResponse> checkAnswer(
       @PathVariable("questionId")

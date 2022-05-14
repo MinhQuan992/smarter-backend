@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Component
 @NoArgsConstructor
 public class UserQuestionMapper {
-  private static final int DEFAULT_END_INDEX_OF_CONTENT = 15;
+  private static final int DEFAULT_END_INDEX_OF_CONTENT = 30;
 
   private String getShortContentFromQuestion(Question question) {
     int endIndexOfContent = Math.min(question.getContent().length(), DEFAULT_END_INDEX_OF_CONTENT);
@@ -31,6 +31,7 @@ public class UserQuestionMapper {
       return UserQuestionResponse.builder()
           .questionId(question.getId())
           .shortContent(getShortContentFromQuestion(question))
+          .imageUrl(question.getImageUrl())
           .isAnswered(true)
           .isAnswerCorrect(answeredQuestions.get(index).isCorrect())
           .isFavorite(answeredQuestions.get(index).isFavorite())
@@ -40,6 +41,7 @@ public class UserQuestionMapper {
     return UserQuestionResponse.builder()
         .questionId(question.getId())
         .shortContent(getShortContentFromQuestion(question))
+        .imageUrl(question.getImageUrl())
         .isAnswered(false)
         .isAnswerCorrect(false)
         .isFavorite(false)
