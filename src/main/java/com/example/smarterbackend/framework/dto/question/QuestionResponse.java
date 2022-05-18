@@ -22,4 +22,5 @@ public class QuestionResponse {
   private String information;
   private String reference;
   private Long groupId;
+  private boolean isFavorite;
 }

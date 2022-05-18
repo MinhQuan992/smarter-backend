@@ -21,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -36,11 +33,12 @@ public class QuestionService {
   private final UserRepository userRepository;
   private final UserService userService;
   private final UserQuestionMapper userQuestionMapper;
+  private final QuestionMapper questionMapper;
 
   public List<QuestionResponse> getQuestionsByGroup(String groupId) {
     log.info("Getting all questions of group {}", groupId);
     QuestionGroup questionGroup = findQuestionGroupById(groupId);
-    return QuestionMapper.INSTANCE.listQuestionToListQuestionDTO(questionGroup.getQuestions());
+    return questionMapper.listQuestionToListQuestionDTO(questionGroup.getQuestions(), null);
   }
 
   private QuestionGroup findQuestionGroupById(String groupId) {
@@ -56,7 +54,7 @@ public class QuestionService {
   public QuestionResponse getQuestionById(String questionId) {
     log.info("Getting one question, ID {}", questionId);
     Question question = findQuestionById(questionId);
-    return QuestionMapper.INSTANCE.questionToQuestionDTO(question);
+    return questionMapper.questionToQuestionDTO(question, null);
   }
 
   private Question findQuestionById(String questionId) {
@@ -95,7 +93,7 @@ public class QuestionService {
             .build();
     questionGroup.addQuestion(question);
 
-    return QuestionMapper.INSTANCE.questionToQuestionDTO(questionRepository.save(question));
+    return questionMapper.questionToQuestionDTO(questionRepository.save(question), null);
   }
 
   private void validateCorrectAnswer(
@@ -152,7 +150,7 @@ public class QuestionService {
           newQuestionGroup.getQuestions().size());
     }
 
-    return QuestionMapper.INSTANCE.questionToQuestionDTO(questionRepository.save(question));
+    return questionMapper.questionToQuestionDTO(questionRepository.save(question), null);
   }
 
   public QuestionResponse getRandomQuestion() {
@@ -174,7 +172,8 @@ public class QuestionService {
     // Step 4: Get a random question from the list
     Random random = new Random();
     int randomIndex = random.nextInt(questions.size());
-    return QuestionMapper.INSTANCE.questionToQuestionDTO(questions.get(randomIndex));
+    return questionMapper.questionToQuestionDTO(
+        questions.get(randomIndex), currentUser.getAnsweredQuestions());
   }
 
   public QuestionResponse getNextQuestionInGroup(String currentQuestionId, boolean getCurrent) {
@@ -182,16 +181,18 @@ public class QuestionService {
         questionRepository
             .findById(Long.parseLong(currentQuestionId))
             .orElseThrow(() -> new NotFoundException("Question not found"));
+    User currentUser = userService.getCurrentUser();
 
     if (getCurrent) {
       log.info("Getting question in group, question ID: {}", currentQuestionId);
-      return QuestionMapper.INSTANCE.questionToQuestionDTO(question);
+      return questionMapper.questionToQuestionDTO(question, currentUser.getAnsweredQuestions());
     }
 
     log.info("Getting next question in group, current question ID: {}", currentQuestionId);
     List<Question> questions = question.getGroup().getQuestions();
     int nextQuestionIndex = getNextQuestionIndex(question, questions);
-    return QuestionMapper.INSTANCE.questionToQuestionDTO(questions.get(nextQuestionIndex));
+    return questionMapper.questionToQuestionDTO(
+        questions.get(nextQuestionIndex), currentUser.getAnsweredQuestions());
   }
 
   public QuestionResponse getNextFavoriteQuestionOfCurrentUser(
@@ -214,14 +215,15 @@ public class QuestionService {
 
     if (getCurrent) {
       log.info("Getting question in favorite question list, question ID: {}", currentQuestionId);
-      return QuestionMapper.INSTANCE.questionToQuestionDTO(question);
+      return questionMapper.questionToQuestionDTO(question, currentUser.getAnsweredQuestions());
     }
 
     log.info(
         "Getting next question in favorite question list, current question ID: {}",
         currentQuestionId);
     int nextQuestionIndex = getNextQuestionIndex(question, favoriteQuestions);
-    return QuestionMapper.INSTANCE.questionToQuestionDTO(favoriteQuestions.get(nextQuestionIndex));
+    return questionMapper.questionToQuestionDTO(
+        favoriteQuestions.get(nextQuestionIndex), currentUser.getAnsweredQuestions());
   }
 
   private int getNextQuestionIndex(Question question, List<Question> questions) {
@@ -236,10 +238,16 @@ public class QuestionService {
     boolean isAnswerCorrect = question.getCorrectAnswer().equals(chosenAnswer);
 
     User currentUser = userService.getCurrentUser();
-    UserQuestion userQuestion = new UserQuestion(currentUser, question, isAnswerCorrect, false);
-
-    currentUser.addAnsweredQuestions(userQuestion);
-    userRepository.save(currentUser);
+    Optional<UserQuestion> userQuestion =
+        userQuestionRepository.findUserQuestionByUserAndQuestion(currentUser, question);
+    if (userQuestion.isEmpty()) {
+      currentUser.addAnsweredQuestions(
+          new UserQuestion(currentUser, question, isAnswerCorrect, false));
+      userRepository.save(currentUser);
+    } else {
+      userQuestion.get().setCorrect(isAnswerCorrect);
+      userQuestionRepository.save(userQuestion.get());
+    }
 
     CheckAnswerResponse response = new CheckAnswerResponse();
     response.setAnswerCorrect(isAnswerCorrect);

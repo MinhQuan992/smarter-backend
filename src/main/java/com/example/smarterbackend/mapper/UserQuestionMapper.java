@@ -59,6 +59,7 @@ public class UserQuestionMapper {
     return UserQuestionResponse.builder()
         .questionId(userQuestion.getQuestion().getId())
         .shortContent(getShortContentFromQuestion(userQuestion.getQuestion()))
+        .imageUrl(userQuestion.getQuestion().getImageUrl())
         .isAnswered(true)
         .isAnswerCorrect(userQuestion.isCorrect())
         .isFavorite(userQuestion.isFavorite())
