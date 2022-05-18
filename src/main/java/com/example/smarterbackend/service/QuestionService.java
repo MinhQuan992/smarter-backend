@@ -209,8 +209,8 @@ public class QuestionService {
             .orElseThrow(() -> new NotFoundException("Question not found"));
 
     if (!favoriteQuestions.contains(question)) {
-      throw new InvalidRequestException(
-          "This question is not in the user's favorite question list");
+      return questionMapper.questionToQuestionDTO(
+          favoriteQuestions.get(0), currentUser.getAnsweredQuestions());
     }
 
     if (getCurrent) {
