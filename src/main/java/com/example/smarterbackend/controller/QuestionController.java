@@ -17,39 +17,39 @@ public class QuestionController implements QuestionAPI {
   private final QuestionService questionService;
 
   @Override
-  public ResponseEntity<List<QuestionResponse>> getQuestionsByGroup(String groupId) {
+  public ResponseEntity<List<AdminQuestionResponse>> getQuestionsByGroup(String groupId) {
     return ResponseEntity.ok(questionService.getQuestionsByGroup(groupId));
   }
 
   @Override
-  public ResponseEntity<QuestionResponse> getQuestionById(String questionId) {
+  public ResponseEntity<AdminQuestionResponse> getQuestionById(String questionId) {
     return ResponseEntity.ok(questionService.getQuestionById(questionId));
   }
 
   @Override
-  public ResponseEntity<QuestionResponse> addQuestion(QuestionPayload payload) {
+  public ResponseEntity<AdminQuestionResponse> addQuestion(AdminQuestionPayload payload) {
     return new ResponseEntity<>(questionService.addQuestion(payload), HttpStatus.CREATED);
   }
 
   @Override
-  public ResponseEntity<QuestionResponse> updateQuestion(
-      String questionId, QuestionPayload payload) {
+  public ResponseEntity<AdminQuestionResponse> updateQuestion(
+      String questionId, AdminQuestionPayload payload) {
     return ResponseEntity.ok(questionService.updateQuestion(questionId, payload));
   }
 
   @Override
-  public ResponseEntity<QuestionResponse> getRandomQuestion() {
+  public ResponseEntity<AdminQuestionResponse> getRandomQuestion() {
     return ResponseEntity.ok(questionService.getRandomQuestion());
   }
 
   @Override
-  public ResponseEntity<QuestionResponse> getNextQuestionInGroup(
+  public ResponseEntity<AdminQuestionResponse> getNextQuestionInGroup(
       String currentQuestionId, boolean getCurrent) {
     return ResponseEntity.ok(questionService.getNextQuestionInGroup(currentQuestionId, getCurrent));
   }
 
   @Override
-  public ResponseEntity<QuestionResponse> getNextFavoriteQuestion(
+  public ResponseEntity<AdminQuestionResponse> getNextFavoriteQuestion(
       String currentQuestionId, boolean getCurrent) {
     return ResponseEntity.ok(
         questionService.getNextFavoriteQuestionOfCurrentUser(currentQuestionId, getCurrent));
@@ -62,7 +62,8 @@ public class QuestionController implements QuestionAPI {
   }
 
   @Override
-  public ResponseEntity<List<UserQuestionResponse>> getQuestionsByGroupForUser(String groupId) {
+  public ResponseEntity<List<UserAdminQuestionResponse>> getQuestionsByGroupForUser(
+      String groupId) {
     return ResponseEntity.ok(questionService.getQuestionsByGroupForUser(groupId));
   }
 
@@ -73,7 +74,7 @@ public class QuestionController implements QuestionAPI {
   }
 
   @Override
-  public ResponseEntity<List<UserQuestionResponse>> getFavoriteQuestionsForUser() {
+  public ResponseEntity<List<UserAdminQuestionResponse>> getFavoriteQuestionsForUser() {
     return ResponseEntity.ok(questionService.getFavoriteQuestionsForUser());
   }
 }

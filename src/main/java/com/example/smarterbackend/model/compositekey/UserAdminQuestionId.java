@@ -11,23 +11,21 @@ import java.util.Objects;
 @Embeddable
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserQuestionId implements Serializable {
-  @Column
-  Long userId;
+public class UserAdminQuestionId implements Serializable {
+  @Column Long userId;
 
-  @Column
-  Long questionId;
+  @Column Long adminQuestionId;
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    UserQuestionId that = (UserQuestionId) o;
-    return userId.equals(that.userId) && questionId.equals(that.questionId);
+    UserAdminQuestionId that = (UserAdminQuestionId) o;
+    return userId.equals(that.userId) && adminQuestionId.equals(that.adminQuestionId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(userId, questionId);
+    return Objects.hash(userId, adminQuestionId);
   }
 }

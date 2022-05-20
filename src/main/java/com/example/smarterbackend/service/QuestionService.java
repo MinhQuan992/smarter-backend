@@ -6,15 +6,15 @@ import com.example.smarterbackend.exception.NotFoundException;
 import com.example.smarterbackend.framework.common.data.Answer;
 import com.example.smarterbackend.framework.dto.DynamicResponse;
 import com.example.smarterbackend.framework.dto.question.*;
-import com.example.smarterbackend.mapper.QuestionMapper;
-import com.example.smarterbackend.mapper.UserQuestionMapper;
-import com.example.smarterbackend.model.Question;
+import com.example.smarterbackend.mapper.AdminQuestionMapper;
+import com.example.smarterbackend.mapper.UserAdminQuestionMapper;
+import com.example.smarterbackend.model.AdminQuestion;
 import com.example.smarterbackend.model.QuestionGroup;
 import com.example.smarterbackend.model.User;
-import com.example.smarterbackend.model.UserQuestion;
+import com.example.smarterbackend.model.UserAdminQuestion;
 import com.example.smarterbackend.repository.QuestionGroupRepository;
-import com.example.smarterbackend.repository.QuestionRepository;
-import com.example.smarterbackend.repository.UserQuestionRepository;
+import com.example.smarterbackend.repository.AdminQuestionRepository;
+import com.example.smarterbackend.repository.UserAdminQuestionRepository;
 import com.example.smarterbackend.repository.UserRepository;
 import com.example.smarterbackend.util.QuestionUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,18 +27,19 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class QuestionService {
-  private final QuestionRepository questionRepository;
+  private final AdminQuestionRepository adminQuestionRepository;
   private final QuestionGroupRepository questionGroupRepository;
-  private final UserQuestionRepository userQuestionRepository;
+  private final UserAdminQuestionRepository userAdminQuestionRepository;
   private final UserRepository userRepository;
   private final UserService userService;
-  private final UserQuestionMapper userQuestionMapper;
-  private final QuestionMapper questionMapper;
+  private final UserAdminQuestionMapper userAdminQuestionMapper;
+  private final AdminQuestionMapper adminQuestionMapper;
 
-  public List<QuestionResponse> getQuestionsByGroup(String groupId) {
+  public List<AdminQuestionResponse> getQuestionsByGroup(String groupId) {
     log.info("Getting all questions of group {}", groupId);
     QuestionGroup questionGroup = findQuestionGroupById(groupId);
-    return questionMapper.listQuestionToListQuestionDTO(questionGroup.getQuestions(), null);
+    return adminQuestionMapper.listAdminQuestionToListAdminQuestionDTO(
+        questionGroup.getAdminQuestions(), null);
   }
 
   private QuestionGroup findQuestionGroupById(String groupId) {
@@ -51,14 +52,14 @@ public class QuestionService {
             });
   }
 
-  public QuestionResponse getQuestionById(String questionId) {
+  public AdminQuestionResponse getQuestionById(String questionId) {
     log.info("Getting one question, ID {}", questionId);
-    Question question = findQuestionById(questionId);
-    return questionMapper.questionToQuestionDTO(question, null);
+    AdminQuestion adminQuestion = findQuestionById(questionId);
+    return adminQuestionMapper.adminQuestionToAdminQuestionDTO(adminQuestion, null);
   }
 
-  private Question findQuestionById(String questionId) {
-    return questionRepository
+  private AdminQuestion findQuestionById(String questionId) {
+    return adminQuestionRepository
         .findById(Long.parseLong(questionId))
         .orElseThrow(
             () -> {
@@ -67,7 +68,7 @@ public class QuestionService {
             });
   }
 
-  public QuestionResponse addQuestion(QuestionPayload payload) {
+  public AdminQuestionResponse addQuestion(AdminQuestionPayload payload) {
     log.info("Adding a new question to group {}", payload.getGroupId());
     QuestionGroup questionGroup = findQuestionGroupById(payload.getGroupId());
 
@@ -79,8 +80,8 @@ public class QuestionService {
         payload.getAnswerC(),
         payload.getAnswerD());
 
-    Question question =
-        Question.builder()
+    AdminQuestion adminQuestion =
+        AdminQuestion.builder()
             .content(payload.getContent())
             .answerA(payload.getAnswerA())
             .answerB(payload.getAnswerB())
@@ -91,9 +92,10 @@ public class QuestionService {
             .information(payload.getInformation())
             .reference(payload.getReference())
             .build();
-    questionGroup.addQuestion(question);
+    questionGroup.addQuestion(adminQuestion);
 
-    return questionMapper.questionToQuestionDTO(questionRepository.save(question), null);
+    return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
+        adminQuestionRepository.save(adminQuestion), null);
   }
 
   private void validateCorrectAnswer(
@@ -106,9 +108,9 @@ public class QuestionService {
     }
   }
 
-  public QuestionResponse updateQuestion(String questionId, QuestionPayload payload) {
+  public AdminQuestionResponse updateQuestion(String questionId, AdminQuestionPayload payload) {
     log.info("Updating one question, ID {}", questionId);
-    Question question = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findQuestionById(questionId);
     QuestionGroup newQuestionGroup = findQuestionGroupById(payload.getGroupId());
     Answer correctAnswer = Answer.fromCode(payload.getCorrectAnswer());
     validateCorrectAnswer(
@@ -118,135 +120,147 @@ public class QuestionService {
         payload.getAnswerC(),
         payload.getAnswerD());
 
-    question.setContent(payload.getContent());
-    question.setAnswerA(payload.getAnswerA());
-    question.setAnswerB(payload.getAnswerB());
-    question.setAnswerC(payload.getAnswerC());
-    question.setAnswerD(payload.getAnswerD());
-    question.setCorrectAnswer(correctAnswer);
-    question.setImageUrl(payload.getImageUrl());
-    question.setInformation(payload.getInformation());
-    question.setReference(payload.getReference());
+    adminQuestion.setContent(payload.getContent());
+    adminQuestion.setAnswerA(payload.getAnswerA());
+    adminQuestion.setAnswerB(payload.getAnswerB());
+    adminQuestion.setAnswerC(payload.getAnswerC());
+    adminQuestion.setAnswerD(payload.getAnswerD());
+    adminQuestion.setCorrectAnswer(correctAnswer);
+    adminQuestion.setImageUrl(payload.getImageUrl());
+    adminQuestion.setInformation(payload.getInformation());
+    adminQuestion.setReference(payload.getReference());
 
-    QuestionGroup oldQuestionGroup = question.getGroup();
+    QuestionGroup oldQuestionGroup = adminQuestion.getGroup();
     if (!newQuestionGroup.equals(oldQuestionGroup)) {
       String oldGroupName = oldQuestionGroup.getName();
       String newGroupName = newQuestionGroup.getName();
 
       log.info(
-          "Old group {} has {} questions", oldGroupName, oldQuestionGroup.getQuestions().size());
+          "Old group {} has {} questions",
+          oldGroupName,
+          oldQuestionGroup.getAdminQuestions().size());
       log.info(
-          "New group {} has {} questions", newGroupName, newQuestionGroup.getQuestions().size());
+          "New group {} has {} questions",
+          newGroupName,
+          newQuestionGroup.getAdminQuestions().size());
       log.info("Changing the group of the question from {} to {}", oldGroupName, newGroupName);
 
-      oldQuestionGroup.removeQuestion(question);
-      newQuestionGroup.addQuestion(question);
+      oldQuestionGroup.removeQuestion(adminQuestion);
+      newQuestionGroup.addQuestion(adminQuestion);
 
       log.info(
           "After changing, group {} has {} questions, group {} has {} questions",
           oldGroupName,
-          oldQuestionGroup.getQuestions().size(),
+          oldQuestionGroup.getAdminQuestions().size(),
           newGroupName,
-          newQuestionGroup.getQuestions().size());
+          newQuestionGroup.getAdminQuestions().size());
     }
 
-    return questionMapper.questionToQuestionDTO(questionRepository.save(question), null);
+    return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
+        adminQuestionRepository.save(adminQuestion), null);
   }
 
-  public QuestionResponse getRandomQuestion() {
+  public AdminQuestionResponse getRandomQuestion() {
     log.info("Getting one random question");
 
     // Step 1: Get all questions from the database
-    List<Question> questions = questionRepository.findAll();
+    List<AdminQuestion> adminQuestions = adminQuestionRepository.findAll();
 
     // Step 2: Get all answered questions of the current user
     User currentUser = userService.getCurrentUser();
-    List<Question> answeredQuestions = userQuestionRepository.getAnsweredQuestions(currentUser);
+    List<AdminQuestion> answeredQuestions =
+        userAdminQuestionRepository.getAnsweredQuestions(currentUser);
 
     // Step 3: Get all non-answered questions of the current user if there are some questions
     // they've not answered
-    if (answeredQuestions.size() < questions.size()) {
-      questions.removeAll(answeredQuestions);
+    if (answeredQuestions.size() < adminQuestions.size()) {
+      adminQuestions.removeAll(answeredQuestions);
     }
 
     // Step 4: Get a random question from the list
     Random random = new Random();
-    int randomIndex = random.nextInt(questions.size());
-    return questionMapper.questionToQuestionDTO(
-        questions.get(randomIndex), currentUser.getAnsweredQuestions());
+    int randomIndex = random.nextInt(adminQuestions.size());
+    return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
+        adminQuestions.get(randomIndex), currentUser.getAnsweredQuestions());
   }
 
-  public QuestionResponse getNextQuestionInGroup(String currentQuestionId, boolean getCurrent) {
-    Question question =
-        questionRepository
+  public AdminQuestionResponse getNextQuestionInGroup(
+      String currentQuestionId, boolean getCurrent) {
+    AdminQuestion adminQuestion =
+        adminQuestionRepository
             .findById(Long.parseLong(currentQuestionId))
             .orElseThrow(() -> new NotFoundException("Question not found"));
     User currentUser = userService.getCurrentUser();
 
     if (getCurrent) {
       log.info("Getting question in group, question ID: {}", currentQuestionId);
-      return questionMapper.questionToQuestionDTO(question, currentUser.getAnsweredQuestions());
+      return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
+          adminQuestion, currentUser.getAnsweredQuestions());
     }
 
     log.info("Getting next question in group, current question ID: {}", currentQuestionId);
-    List<Question> questions = question.getGroup().getQuestions();
-    int nextQuestionIndex = getNextQuestionIndex(question, questions);
-    return questionMapper.questionToQuestionDTO(
-        questions.get(nextQuestionIndex), currentUser.getAnsweredQuestions());
+    List<AdminQuestion> adminQuestions = adminQuestion.getGroup().getAdminQuestions();
+    int nextQuestionIndex = getNextQuestionIndex(adminQuestion, adminQuestions);
+    return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
+        adminQuestions.get(nextQuestionIndex), currentUser.getAnsweredQuestions());
   }
 
-  public QuestionResponse getNextFavoriteQuestionOfCurrentUser(
+  public AdminQuestionResponse getNextFavoriteQuestionOfCurrentUser(
       String currentQuestionId, boolean getCurrent) {
     User currentUser = userService.getCurrentUser();
-    List<Question> favoriteQuestions = userQuestionRepository.getFavoriteQuestions(currentUser);
+    List<AdminQuestion> favoriteQuestions =
+        userAdminQuestionRepository.getFavoriteQuestions(currentUser);
     if (favoriteQuestions.isEmpty()) {
       throw new InvalidRequestException("This user hasn't had any favorite questions");
     }
 
-    Question question =
-        questionRepository
+    AdminQuestion adminQuestion =
+        adminQuestionRepository
             .findById(Long.parseLong(currentQuestionId))
             .orElseThrow(() -> new NotFoundException("Question not found"));
 
-    if (!favoriteQuestions.contains(question)) {
-      return questionMapper.questionToQuestionDTO(
+    if (!favoriteQuestions.contains(adminQuestion)) {
+      return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
           favoriteQuestions.get(0), currentUser.getAnsweredQuestions());
     }
 
     if (getCurrent) {
       log.info("Getting question in favorite question list, question ID: {}", currentQuestionId);
-      return questionMapper.questionToQuestionDTO(question, currentUser.getAnsweredQuestions());
+      return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
+          adminQuestion, currentUser.getAnsweredQuestions());
     }
 
     log.info(
         "Getting next question in favorite question list, current question ID: {}",
         currentQuestionId);
-    int nextQuestionIndex = getNextQuestionIndex(question, favoriteQuestions);
-    return questionMapper.questionToQuestionDTO(
+    int nextQuestionIndex = getNextQuestionIndex(adminQuestion, favoriteQuestions);
+    return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
         favoriteQuestions.get(nextQuestionIndex), currentUser.getAnsweredQuestions());
   }
 
-  private int getNextQuestionIndex(Question question, List<Question> questions) {
-    int questionIndexInList = questions.indexOf(question);
-    return (questionIndexInList == questions.size() - 1) ? 0 : questionIndexInList + 1;
+  private int getNextQuestionIndex(
+      AdminQuestion adminQuestion, List<AdminQuestion> adminQuestions) {
+    int questionIndexInList = adminQuestions.indexOf(adminQuestion);
+    return (questionIndexInList == adminQuestions.size() - 1) ? 0 : questionIndexInList + 1;
   }
 
   public CheckAnswerResponse checkAnswer(String questionId, CheckAnswerPayload payload) {
+    // TODO: make it generic
     log.info("Checking answer for question, ID {}", questionId);
-    Question question = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findQuestionById(questionId);
     Answer chosenAnswer = Answer.fromCode(payload.getChosenAnswer());
-    boolean isAnswerCorrect = question.getCorrectAnswer().equals(chosenAnswer);
+    boolean isAnswerCorrect = adminQuestion.getCorrectAnswer().equals(chosenAnswer);
 
     User currentUser = userService.getCurrentUser();
-    Optional<UserQuestion> userQuestion =
-        userQuestionRepository.findUserQuestionByUserAndQuestion(currentUser, question);
+    Optional<UserAdminQuestion> userQuestion =
+        userAdminQuestionRepository.findByUserAndAdminQuestion(currentUser, adminQuestion);
     if (userQuestion.isEmpty()) {
       currentUser.addAnsweredQuestions(
-          new UserQuestion(currentUser, question, isAnswerCorrect, false));
+          new UserAdminQuestion(currentUser, adminQuestion, isAnswerCorrect, false));
       userRepository.save(currentUser);
     } else {
       userQuestion.get().setCorrect(isAnswerCorrect);
-      userQuestionRepository.save(userQuestion.get());
+      userAdminQuestionRepository.save(userQuestion.get());
     }
 
     CheckAnswerResponse response = new CheckAnswerResponse();
@@ -254,24 +268,30 @@ public class QuestionService {
     return response;
   }
 
-  public List<UserQuestionResponse> getQuestionsByGroupForUser(String groupId) {
+  public List<UserAdminQuestionResponse> getQuestionsByGroupForUser(String groupId) {
     log.info("Getting all questions of group {} for current user", groupId);
     QuestionGroup questionGroup = findQuestionGroupById(groupId);
-    List<Question> questions = questionGroup.getQuestions();
+    List<AdminQuestion> adminQuestions = questionGroup.getAdminQuestions();
+
+    if (adminQuestions.isEmpty()) {
+      throw new NoContentException();
+    }
 
     User currentUser = userService.getCurrentUser();
-    List<UserQuestion> answeredQuestions = currentUser.getAnsweredQuestions();
+    List<UserAdminQuestion> answeredQuestions = currentUser.getAnsweredQuestions();
 
-    return userQuestionMapper.listQuestionToListUserQuestionDTO(questions, answeredQuestions);
+    return userAdminQuestionMapper.listAdminQuestionToListUserAdminQuestionDTO(
+        adminQuestions, answeredQuestions);
   }
 
   public DynamicResponse setFavorite(String questionId, SetFavoritePayload payload) {
     log.info("Changing the favorite status of question {}", questionId);
-    Question question = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findQuestionById(questionId);
     User currentUser = userService.getCurrentUser();
-    List<UserQuestion> answeredQuestions = currentUser.getAnsweredQuestions();
+    List<UserAdminQuestion> answeredQuestions = currentUser.getAnsweredQuestions();
 
-    Map<String, Object> questionChecker = QuestionUtils.checkQuestion(question, answeredQuestions);
+    Map<String, Object> questionChecker =
+        QuestionUtils.checkQuestion(adminQuestion, answeredQuestions);
     boolean isAnswered = (boolean) questionChecker.get("isAnswered");
 
     if (!isAnswered) {
@@ -289,14 +309,15 @@ public class QuestionService {
     return response;
   }
 
-  public List<UserQuestionResponse> getFavoriteQuestionsForUser() {
+  public List<UserAdminQuestionResponse> getFavoriteQuestionsForUser() {
     log.info("Getting all favorite questions for current user");
     User currentUser = userService.getCurrentUser();
-    List<UserQuestion> favoriteQuestions =
-        userQuestionRepository.findAllByIsFavoriteIsTrueAndUserEquals(currentUser);
+    List<UserAdminQuestion> favoriteQuestions =
+        userAdminQuestionRepository.findAllByIsFavoriteIsTrueAndUserEquals(currentUser);
     if (favoriteQuestions.isEmpty()) {
       throw new NoContentException();
     }
-    return userQuestionMapper.listUserQuestionToListUserQuestionDTO(favoriteQuestions);
+    return userAdminQuestionMapper.listUserAdminQuestionToListUserAdminQuestionDTO(
+        favoriteQuestions);
   }
 }

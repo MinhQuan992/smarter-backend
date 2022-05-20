@@ -1,20 +1,28 @@
 package com.example.smarterbackend.util;
 
-import com.example.smarterbackend.model.Question;
-import com.example.smarterbackend.model.UserQuestion;
+import com.example.smarterbackend.model.AdminQuestion;
+import com.example.smarterbackend.model.BaseQuestion;
+import com.example.smarterbackend.model.UserAdminQuestion;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class QuestionUtils {
+  private static final int DEFAULT_LENGTH_OF_CONTENT = 30;
+
+  public static <T extends BaseQuestion> String getShortContentFromQuestion(T question) {
+    int lengthOfContent = Math.min(question.getContent().length(), DEFAULT_LENGTH_OF_CONTENT);
+    return question.getContent().substring(0, lengthOfContent) + "...";
+  }
+
   public static Map<String, Object> checkQuestion(
-      Question question, List<UserQuestion> answeredQuestions) {
+          AdminQuestion adminQuestion, List<UserAdminQuestion> answeredQuestions) {
     boolean isAnswered = false;
     int numberOfQuestions = answeredQuestions.size();
     int index = 0;
     while (index < numberOfQuestions && !isAnswered) {
-      if (answeredQuestions.get(index).getQuestion().equals(question)) {
+      if (answeredQuestions.get(index).getAdminQuestion().equals(adminQuestion)) {
         isAnswered = true;
       } else {
         index++;

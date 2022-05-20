@@ -41,16 +41,19 @@ public class User implements UserDetails {
   private Authority authority;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserQuestion> answeredQuestions;
+  private List<UserAdminQuestion> answeredQuestions;
 
-  public void addAnsweredQuestions(UserQuestion question) {
+  public void addAnsweredQuestions(UserAdminQuestion question) {
     this.answeredQuestions.add(question);
   }
 
-  public void removeQuestion(UserQuestion question) {
+  public void removeQuestion(UserAdminQuestion question) {
     question.setUser(null);
     this.answeredQuestions.remove(question);
   }
+
+  @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<UserQuestion> userQuestions;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,18 +1,16 @@
 package com.example.smarterbackend.framework.dto.question;
 
-import com.example.smarterbackend.framework.common.constant.RegexConstants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class QuestionPayload {
+public class BaseQuestionPayload {
   @NotBlank(message = "The content is required")
   @Size(max = 1000, message = "The length of the content must not exceed 1000 characters")
   private String content;
@@ -36,15 +34,7 @@ public class QuestionPayload {
 
   private String imageUrl;
 
-  @NotBlank(message = "The information is required")
   private String information;
 
-  @NotBlank(message = "The reference is required")
   private String reference;
-
-  @NotBlank(message = "The ID of question group is required")
-  @Pattern(
-      regexp = RegexConstants.COMMON_ID_PATTERN,
-      message = "The ID must contain numeric characters only")
-  private String groupId;
 }
