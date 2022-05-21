@@ -101,4 +101,40 @@ public interface QuestionAPI {
 
   @GetMapping("/get-for-user/favorite")
   ResponseEntity<List<UserAdminQuestionResponse>> getFavoriteQuestionsForUser();
+
+  @PostMapping("/user-questions")
+  ResponseEntity<UserQuestionResponse> addUserQuestion(
+      @Valid @RequestBody BaseQuestionPayload payload);
+
+  @PutMapping("/user-questions/{questionId}")
+  ResponseEntity<UserQuestionResponse> updateUserQuestion(
+      @PathVariable("questionId")
+          @NotBlank(message = "The question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The question ID must contain numeric characters only")
+          String questionId,
+      @Valid @RequestBody BaseQuestionPayload payload);
+
+  @DeleteMapping("/user-questions/{questionId}")
+  ResponseEntity<DynamicResponse> deleteUserQuestion(
+      @PathVariable("questionId")
+          @NotBlank(message = "The question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The question ID must contain numeric characters only")
+          String questionId);
+
+  @GetMapping("/user-questions")
+  ResponseEntity<List<UserQuestionResponse>> getUserQuestionsForUser();
+
+  @GetMapping("/user-questions/next-user-question")
+  ResponseEntity<UserQuestionResponse> getNextUserQuestion(
+      @RequestParam("currentQuestionId")
+          @NotBlank(message = "The current question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The current question ID must contain numeric characters only")
+          String currentQuestionId,
+      @RequestParam("getCurrent") boolean getCurrent);
 }

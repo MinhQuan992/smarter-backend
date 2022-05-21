@@ -21,6 +21,4 @@ public class UserQuestion extends BaseQuestion {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
   private User author;
-
-  private String shortContent;
 }

@@ -8,14 +8,9 @@ import com.example.smarterbackend.framework.dto.DynamicResponse;
 import com.example.smarterbackend.framework.dto.question.*;
 import com.example.smarterbackend.mapper.AdminQuestionMapper;
 import com.example.smarterbackend.mapper.UserAdminQuestionMapper;
-import com.example.smarterbackend.model.AdminQuestion;
-import com.example.smarterbackend.model.QuestionGroup;
-import com.example.smarterbackend.model.User;
-import com.example.smarterbackend.model.UserAdminQuestion;
-import com.example.smarterbackend.repository.QuestionGroupRepository;
-import com.example.smarterbackend.repository.AdminQuestionRepository;
-import com.example.smarterbackend.repository.UserAdminQuestionRepository;
-import com.example.smarterbackend.repository.UserRepository;
+import com.example.smarterbackend.mapper.UserQuestionMapper;
+import com.example.smarterbackend.model.*;
+import com.example.smarterbackend.repository.*;
 import com.example.smarterbackend.util.QuestionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +23,14 @@ import java.util.*;
 @RequiredArgsConstructor
 public class QuestionService {
   private final AdminQuestionRepository adminQuestionRepository;
+  private final UserQuestionRepository userQuestionRepository;
   private final QuestionGroupRepository questionGroupRepository;
   private final UserAdminQuestionRepository userAdminQuestionRepository;
   private final UserRepository userRepository;
   private final UserService userService;
   private final UserAdminQuestionMapper userAdminQuestionMapper;
   private final AdminQuestionMapper adminQuestionMapper;
+  private final UserQuestionMapper userQuestionMapper;
 
   public List<AdminQuestionResponse> getQuestionsByGroup(String groupId) {
     log.info("Getting all questions of group {}", groupId);
@@ -54,12 +51,22 @@ public class QuestionService {
 
   public AdminQuestionResponse getQuestionById(String questionId) {
     log.info("Getting one question, ID {}", questionId);
-    AdminQuestion adminQuestion = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findAdminQuestionById(questionId);
     return adminQuestionMapper.adminQuestionToAdminQuestionDTO(adminQuestion, null);
   }
 
-  private AdminQuestion findQuestionById(String questionId) {
+  private AdminQuestion findAdminQuestionById(String questionId) {
     return adminQuestionRepository
+        .findById(Long.parseLong(questionId))
+        .orElseThrow(
+            () -> {
+              log.error("Could not find question, ID {}", questionId);
+              return new NotFoundException("Question not found");
+            });
+  }
+
+  private UserQuestion findUserQuestionById(String questionId) {
+    return userQuestionRepository
         .findById(Long.parseLong(questionId))
         .orElseThrow(
             () -> {
@@ -110,25 +117,9 @@ public class QuestionService {
 
   public AdminQuestionResponse updateQuestion(String questionId, AdminQuestionPayload payload) {
     log.info("Updating one question, ID {}", questionId);
-    AdminQuestion adminQuestion = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findAdminQuestionById(questionId);
     QuestionGroup newQuestionGroup = findQuestionGroupById(payload.getGroupId());
-    Answer correctAnswer = Answer.fromCode(payload.getCorrectAnswer());
-    validateCorrectAnswer(
-        correctAnswer,
-        payload.getAnswerA(),
-        payload.getAnswerB(),
-        payload.getAnswerC(),
-        payload.getAnswerD());
-
-    adminQuestion.setContent(payload.getContent());
-    adminQuestion.setAnswerA(payload.getAnswerA());
-    adminQuestion.setAnswerB(payload.getAnswerB());
-    adminQuestion.setAnswerC(payload.getAnswerC());
-    adminQuestion.setAnswerD(payload.getAnswerD());
-    adminQuestion.setCorrectAnswer(correctAnswer);
-    adminQuestion.setImageUrl(payload.getImageUrl());
-    adminQuestion.setInformation(payload.getInformation());
-    adminQuestion.setReference(payload.getReference());
+    updateQuestionProperties(adminQuestion, payload);
 
     QuestionGroup oldQuestionGroup = adminQuestion.getGroup();
     if (!newQuestionGroup.equals(oldQuestionGroup)) {
@@ -158,6 +149,27 @@ public class QuestionService {
 
     return adminQuestionMapper.adminQuestionToAdminQuestionDTO(
         adminQuestionRepository.save(adminQuestion), null);
+  }
+
+  private <T extends BaseQuestion, B extends BaseQuestionPayload> void updateQuestionProperties(
+      T question, B payload) {
+    Answer correctAnswer = Answer.fromCode(payload.getCorrectAnswer());
+    validateCorrectAnswer(
+        correctAnswer,
+        payload.getAnswerA(),
+        payload.getAnswerB(),
+        payload.getAnswerC(),
+        payload.getAnswerD());
+
+    question.setContent(payload.getContent());
+    question.setAnswerA(payload.getAnswerA());
+    question.setAnswerB(payload.getAnswerB());
+    question.setAnswerC(payload.getAnswerC());
+    question.setAnswerD(payload.getAnswerD());
+    question.setCorrectAnswer(correctAnswer);
+    question.setImageUrl(payload.getImageUrl());
+    question.setInformation(payload.getInformation());
+    question.setReference(payload.getReference());
   }
 
   public AdminQuestionResponse getRandomQuestion() {
@@ -247,7 +259,7 @@ public class QuestionService {
   public CheckAnswerResponse checkAnswer(String questionId, CheckAnswerPayload payload) {
     // TODO: make it generic
     log.info("Checking answer for question, ID {}", questionId);
-    AdminQuestion adminQuestion = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findAdminQuestionById(questionId);
     Answer chosenAnswer = Answer.fromCode(payload.getChosenAnswer());
     boolean isAnswerCorrect = adminQuestion.getCorrectAnswer().equals(chosenAnswer);
 
@@ -286,7 +298,7 @@ public class QuestionService {
 
   public DynamicResponse setFavorite(String questionId, SetFavoritePayload payload) {
     log.info("Changing the favorite status of question {}", questionId);
-    AdminQuestion adminQuestion = findQuestionById(questionId);
+    AdminQuestion adminQuestion = findAdminQuestionById(questionId);
     User currentUser = userService.getCurrentUser();
     List<UserAdminQuestion> answeredQuestions = currentUser.getAnsweredQuestions();
 
@@ -319,5 +331,69 @@ public class QuestionService {
     }
     return userAdminQuestionMapper.listUserAdminQuestionToListUserAdminQuestionDTO(
         favoriteQuestions);
+  }
+
+  public UserQuestionResponse addUserQuestion(BaseQuestionPayload payload) {
+    User currentUser = userService.getCurrentUser();
+    log.info("Adding new user-question for user ID {}", currentUser.getId());
+
+    Answer correctAnswer = Answer.fromCode(payload.getCorrectAnswer());
+    validateCorrectAnswer(
+        correctAnswer,
+        payload.getAnswerA(),
+        payload.getAnswerB(),
+        payload.getAnswerC(),
+        payload.getAnswerD());
+
+    UserQuestion userQuestion =
+        UserQuestion.builder()
+            .content(payload.getContent())
+            .answerA(payload.getAnswerA())
+            .answerB(payload.getAnswerB())
+            .answerC(payload.getAnswerC())
+            .answerD(payload.getAnswerD())
+            .correctAnswer(correctAnswer)
+            .imageUrl(payload.getImageUrl())
+            .information(payload.getInformation())
+            .reference(payload.getReference())
+            .build();
+
+    currentUser.addUserQuestions(userQuestion);
+
+    return userQuestionMapper.userQuestionToUserQuestionDTO(
+        userQuestionRepository.save(userQuestion));
+  }
+
+  public UserQuestionResponse updateUserQuestion(String questionId, BaseQuestionPayload payload) {
+    User currentUser = userService.getCurrentUser();
+    log.info("Updating user-question ID {}", questionId);
+    UserQuestion userQuestion = findUserQuestionById(questionId);
+
+    if (!currentUser.getUserQuestions().contains(userQuestion)) {
+      throw new InvalidRequestException("You are not the author of this question");
+    }
+
+    updateQuestionProperties(userQuestion, payload);
+    return userQuestionMapper.userQuestionToUserQuestionDTO(
+        userQuestionRepository.save(userQuestion));
+  }
+
+  public DynamicResponse deleteUserQuestion(String questionId) {
+    User currentUser = userService.getCurrentUser();
+    log.info("Deleting user-question ID {}", questionId);
+    UserQuestion userQuestion = findUserQuestionById(questionId);
+
+    if (!currentUser.getUserQuestions().contains(userQuestion)) {
+      throw new InvalidRequestException("You are not the author of this question");
+    }
+
+    currentUser.removeQuestion(userQuestion);
+    userRepository.save(currentUser);
+
+    DynamicResponse response = new DynamicResponse();
+    Map<String, Boolean> properties = new HashMap<>();
+    properties.put("isDeleted", true);
+    response.setProperties(properties);
+    return response;
   }
 }

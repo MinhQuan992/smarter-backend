@@ -77,4 +77,31 @@ public class QuestionController implements QuestionAPI {
   public ResponseEntity<List<UserAdminQuestionResponse>> getFavoriteQuestionsForUser() {
     return ResponseEntity.ok(questionService.getFavoriteQuestionsForUser());
   }
+
+  @Override
+  public ResponseEntity<UserQuestionResponse> addUserQuestion(BaseQuestionPayload payload) {
+    return ResponseEntity.ok(questionService.addUserQuestion(payload));
+  }
+
+  @Override
+  public ResponseEntity<UserQuestionResponse> updateUserQuestion(
+      String questionId, BaseQuestionPayload payload) {
+    return ResponseEntity.ok(questionService.updateUserQuestion(questionId, payload));
+  }
+
+  @Override
+  public ResponseEntity<DynamicResponse> deleteUserQuestion(String questionId) {
+    return ResponseEntity.ok(questionService.deleteUserQuestion(questionId));
+  }
+
+  @Override
+  public ResponseEntity<List<UserQuestionResponse>> getUserQuestionsForUser() {
+    return null;
+  }
+
+  @Override
+  public ResponseEntity<UserQuestionResponse> getNextUserQuestion(
+      String currentQuestionId, boolean getCurrent) {
+    return null;
+  }
 }
