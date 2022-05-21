@@ -250,29 +250,38 @@ public class QuestionService {
         favoriteQuestions.get(nextQuestionIndex), currentUser.getAnsweredQuestions());
   }
 
-  private int getNextQuestionIndex(
-      AdminQuestion adminQuestion, List<AdminQuestion> adminQuestions) {
-    int questionIndexInList = adminQuestions.indexOf(adminQuestion);
-    return (questionIndexInList == adminQuestions.size() - 1) ? 0 : questionIndexInList + 1;
+  private <T extends BaseQuestion> int getNextQuestionIndex(T question, List<T> questions) {
+    int questionIndexInList = questions.indexOf(question);
+    return (questionIndexInList == questions.size() - 1) ? 0 : questionIndexInList + 1;
   }
 
   public CheckAnswerResponse checkAnswer(String questionId, CheckAnswerPayload payload) {
-    // TODO: make it generic
     log.info("Checking answer for question, ID {}", questionId);
-    AdminQuestion adminQuestion = findAdminQuestionById(questionId);
-    Answer chosenAnswer = Answer.fromCode(payload.getChosenAnswer());
-    boolean isAnswerCorrect = adminQuestion.getCorrectAnswer().equals(chosenAnswer);
-
     User currentUser = userService.getCurrentUser();
-    Optional<UserAdminQuestion> userQuestion =
-        userAdminQuestionRepository.findByUserAndAdminQuestion(currentUser, adminQuestion);
-    if (userQuestion.isEmpty()) {
-      currentUser.addAnsweredQuestions(
-          new UserAdminQuestion(currentUser, adminQuestion, isAnswerCorrect, false));
-      userRepository.save(currentUser);
-    } else {
-      userQuestion.get().setCorrect(isAnswerCorrect);
-      userAdminQuestionRepository.save(userQuestion.get());
+    BaseQuestion question;
+    try {
+      question = findAdminQuestionById(questionId);
+    } catch (NotFoundException ex) {
+      question = findUserQuestionById(questionId);
+      if (!currentUser.getUserQuestions().contains(question)) {
+        throw new InvalidRequestException("You are not the author of this question");
+      }
+    }
+    Answer chosenAnswer = Answer.fromCode(payload.getChosenAnswer());
+    boolean isAnswerCorrect = question.getCorrectAnswer().equals(chosenAnswer);
+
+    if (question instanceof AdminQuestion) {
+      Optional<UserAdminQuestion> userQuestion =
+          userAdminQuestionRepository.findByUserAndAdminQuestion(
+              currentUser, (AdminQuestion) question);
+      if (userQuestion.isEmpty()) {
+        currentUser.addAnsweredQuestions(
+            new UserAdminQuestion(currentUser, (AdminQuestion) question, isAnswerCorrect, false));
+        userRepository.save(currentUser);
+      } else {
+        userQuestion.get().setCorrect(isAnswerCorrect);
+        userAdminQuestionRepository.save(userQuestion.get());
+      }
     }
 
     CheckAnswerResponse response = new CheckAnswerResponse();
@@ -395,5 +404,35 @@ public class QuestionService {
     properties.put("isDeleted", true);
     response.setProperties(properties);
     return response;
+  }
+
+  public List<UserQuestionResponse> getUserQuestionsForUser() {
+    User currentUser = userService.getCurrentUser();
+    log.info("Getting all user-questions for user ID {}", currentUser.getId());
+    if (currentUser.getUserQuestions().isEmpty()) {
+      throw new NoContentException();
+    }
+    return userQuestionMapper.listUserQuestionToListUserQuestionDTO(currentUser.getUserQuestions());
+  }
+
+  public UserQuestionResponse getNextUserQuestion(String currentQuestionId, boolean getCurrent) {
+    User currentUser = userService.getCurrentUser();
+    UserQuestion userQuestion = findUserQuestionById(currentQuestionId);
+    List<UserQuestion> userQuestions = currentUser.getUserQuestions();
+
+    if (!userQuestions.contains(userQuestion)) {
+      throw new InvalidRequestException("You are not the author of this question");
+    }
+
+    if (getCurrent) {
+      log.info("Getting user-question in user-question list, question ID: {}", currentQuestionId);
+      return userQuestionMapper.userQuestionToUserQuestionDTO(userQuestion);
+    }
+
+    log.info(
+        "Getting next user-question in user-question list, current question ID: {}",
+        currentQuestionId);
+    int nextQuestionIndex = getNextQuestionIndex(userQuestion, userQuestions);
+    return userQuestionMapper.userQuestionToUserQuestionDTO(userQuestions.get(nextQuestionIndex));
   }
 }

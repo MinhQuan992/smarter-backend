@@ -80,7 +80,7 @@ public class QuestionController implements QuestionAPI {
 
   @Override
   public ResponseEntity<UserQuestionResponse> addUserQuestion(BaseQuestionPayload payload) {
-    return ResponseEntity.ok(questionService.addUserQuestion(payload));
+    return new ResponseEntity<>(questionService.addUserQuestion(payload), HttpStatus.CREATED);
   }
 
   @Override
@@ -96,12 +96,12 @@ public class QuestionController implements QuestionAPI {
 
   @Override
   public ResponseEntity<List<UserQuestionResponse>> getUserQuestionsForUser() {
-    return null;
+    return ResponseEntity.ok(questionService.getUserQuestionsForUser());
   }
 
   @Override
   public ResponseEntity<UserQuestionResponse> getNextUserQuestion(
       String currentQuestionId, boolean getCurrent) {
-    return null;
+    return ResponseEntity.ok(questionService.getNextUserQuestion(currentQuestionId, getCurrent));
   }
 }
