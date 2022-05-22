@@ -103,11 +103,11 @@ public interface QuestionAPI {
   ResponseEntity<List<UserAdminQuestionResponse>> getFavoriteQuestionsForUser();
 
   @PostMapping("/user-questions")
-  ResponseEntity<UserQuestionResponse> addUserQuestion(
+  ResponseEntity<FullUserQuestionResponse> addUserQuestion(
       @Valid @RequestBody BaseQuestionPayload payload);
 
   @PutMapping("/user-questions/{questionId}")
-  ResponseEntity<UserQuestionResponse> updateUserQuestion(
+  ResponseEntity<FullUserQuestionResponse> updateUserQuestion(
       @PathVariable("questionId")
           @NotBlank(message = "The question ID is required")
           @Pattern(
@@ -126,10 +126,10 @@ public interface QuestionAPI {
           String questionId);
 
   @GetMapping("/user-questions")
-  ResponseEntity<List<UserQuestionResponse>> getUserQuestionsForUser();
+  ResponseEntity<List<BriefUserQuestionResponse>> getUserQuestionsForUser();
 
   @GetMapping("/user-questions/next-user-question")
-  ResponseEntity<UserQuestionResponse> getNextUserQuestion(
+  ResponseEntity<FullUserQuestionResponse> getNextUserQuestion(
       @RequestParam("currentQuestionId")
           @NotBlank(message = "The current question ID is required")
           @Pattern(

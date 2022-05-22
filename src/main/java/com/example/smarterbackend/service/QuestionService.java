@@ -7,8 +7,9 @@ import com.example.smarterbackend.framework.common.data.Answer;
 import com.example.smarterbackend.framework.dto.DynamicResponse;
 import com.example.smarterbackend.framework.dto.question.*;
 import com.example.smarterbackend.mapper.AdminQuestionMapper;
+import com.example.smarterbackend.mapper.FullUserQuestionMapper;
 import com.example.smarterbackend.mapper.UserAdminQuestionMapper;
-import com.example.smarterbackend.mapper.UserQuestionMapper;
+import com.example.smarterbackend.mapper.BriefUserQuestionMapper;
 import com.example.smarterbackend.model.*;
 import com.example.smarterbackend.repository.*;
 import com.example.smarterbackend.util.QuestionUtils;
@@ -30,7 +31,7 @@ public class QuestionService {
   private final UserService userService;
   private final UserAdminQuestionMapper userAdminQuestionMapper;
   private final AdminQuestionMapper adminQuestionMapper;
-  private final UserQuestionMapper userQuestionMapper;
+  private final BriefUserQuestionMapper briefUserQuestionMapper;
 
   public List<AdminQuestionResponse> getQuestionsByGroup(String groupId) {
     log.info("Getting all questions of group {}", groupId);
@@ -342,7 +343,7 @@ public class QuestionService {
         favoriteQuestions);
   }
 
-  public UserQuestionResponse addUserQuestion(BaseQuestionPayload payload) {
+  public FullUserQuestionResponse addUserQuestion(BaseQuestionPayload payload) {
     User currentUser = userService.getCurrentUser();
     log.info("Adding new user-question for user ID {}", currentUser.getId());
 
@@ -369,11 +370,12 @@ public class QuestionService {
 
     currentUser.addUserQuestions(userQuestion);
 
-    return userQuestionMapper.userQuestionToUserQuestionDTO(
+    return FullUserQuestionMapper.INSTANCE.userQuestionToFullUserQuestionDTO(
         userQuestionRepository.save(userQuestion));
   }
 
-  public UserQuestionResponse updateUserQuestion(String questionId, BaseQuestionPayload payload) {
+  public FullUserQuestionResponse updateUserQuestion(
+      String questionId, BaseQuestionPayload payload) {
     User currentUser = userService.getCurrentUser();
     log.info("Updating user-question ID {}", questionId);
     UserQuestion userQuestion = findUserQuestionById(questionId);
@@ -383,7 +385,7 @@ public class QuestionService {
     }
 
     updateQuestionProperties(userQuestion, payload);
-    return userQuestionMapper.userQuestionToUserQuestionDTO(
+    return FullUserQuestionMapper.INSTANCE.userQuestionToFullUserQuestionDTO(
         userQuestionRepository.save(userQuestion));
   }
 
@@ -406,16 +408,18 @@ public class QuestionService {
     return response;
   }
 
-  public List<UserQuestionResponse> getUserQuestionsForUser() {
+  public List<BriefUserQuestionResponse> getUserQuestionsForUser() {
     User currentUser = userService.getCurrentUser();
     log.info("Getting all user-questions for user ID {}", currentUser.getId());
     if (currentUser.getUserQuestions().isEmpty()) {
       throw new NoContentException();
     }
-    return userQuestionMapper.listUserQuestionToListUserQuestionDTO(currentUser.getUserQuestions());
+    return briefUserQuestionMapper.listUserQuestionToListBriefUserQuestionDTO(
+        currentUser.getUserQuestions());
   }
 
-  public UserQuestionResponse getNextUserQuestion(String currentQuestionId, boolean getCurrent) {
+  public FullUserQuestionResponse getNextUserQuestion(
+      String currentQuestionId, boolean getCurrent) {
     User currentUser = userService.getCurrentUser();
     UserQuestion userQuestion = findUserQuestionById(currentQuestionId);
     List<UserQuestion> userQuestions = currentUser.getUserQuestions();
@@ -426,13 +430,14 @@ public class QuestionService {
 
     if (getCurrent) {
       log.info("Getting user-question in user-question list, question ID: {}", currentQuestionId);
-      return userQuestionMapper.userQuestionToUserQuestionDTO(userQuestion);
+      return FullUserQuestionMapper.INSTANCE.userQuestionToFullUserQuestionDTO(userQuestion);
     }
 
     log.info(
         "Getting next user-question in user-question list, current question ID: {}",
         currentQuestionId);
     int nextQuestionIndex = getNextQuestionIndex(userQuestion, userQuestions);
-    return userQuestionMapper.userQuestionToUserQuestionDTO(userQuestions.get(nextQuestionIndex));
+    return FullUserQuestionMapper.INSTANCE.userQuestionToFullUserQuestionDTO(
+        userQuestions.get(nextQuestionIndex));
   }
 }
