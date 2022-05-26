@@ -22,23 +22,23 @@ public class QuestionGroup {
   private String name;
 
   @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-  private List<Question> questions;
+  private List<AdminQuestion> adminQuestions;
 
-  public void addQuestion(Question question) {
-    this.questions.add(question);
-    question.setGroup(this);
+  public void addQuestion(AdminQuestion adminQuestion) {
+    this.adminQuestions.add(adminQuestion);
+    adminQuestion.setGroup(this);
   }
 
-  public void removeQuestion(Question question) {
-    question.setGroup(null);
-    this.questions.remove(question);
+  public void removeQuestion(AdminQuestion adminQuestion) {
+    adminQuestion.setGroup(null);
+    this.adminQuestions.remove(adminQuestion);
   }
 
   public void removeQuestions() {
-    Iterator<Question> iterator = this.questions.iterator();
+    Iterator<AdminQuestion> iterator = this.adminQuestions.iterator();
     while (iterator.hasNext()) {
-      Question question = iterator.next();
-      question.setGroup(null);
+      AdminQuestion adminQuestion = iterator.next();
+      adminQuestion.setGroup(null);
       iterator.remove();
     }
   }

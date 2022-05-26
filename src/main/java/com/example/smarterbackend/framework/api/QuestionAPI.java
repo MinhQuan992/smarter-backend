@@ -16,7 +16,7 @@ import java.util.List;
 @Validated
 public interface QuestionAPI {
   @GetMapping("/group/{groupId}")
-  ResponseEntity<List<QuestionResponse>> getQuestionsByGroup(
+  ResponseEntity<List<AdminQuestionResponse>> getQuestionsByGroup(
       @PathVariable("groupId")
           @NotBlank(message = "The group ID is required")
           @Pattern(
@@ -25,7 +25,7 @@ public interface QuestionAPI {
           String groupId);
 
   @GetMapping("/{questionId}")
-  ResponseEntity<QuestionResponse> getQuestionById(
+  ResponseEntity<AdminQuestionResponse> getQuestionById(
       @PathVariable("questionId")
           @NotBlank(message = "The question ID is required")
           @Pattern(
@@ -34,23 +34,24 @@ public interface QuestionAPI {
           String questionId);
 
   @PostMapping
-  ResponseEntity<QuestionResponse> addQuestion(@Valid @RequestBody QuestionPayload payload);
+  ResponseEntity<AdminQuestionResponse> addQuestion(
+      @Valid @RequestBody AdminQuestionPayload payload);
 
   @PutMapping("/update-question/{questionId}")
-  ResponseEntity<QuestionResponse> updateQuestion(
+  ResponseEntity<AdminQuestionResponse> updateQuestion(
       @PathVariable("questionId")
           @NotBlank(message = "The question ID is required")
           @Pattern(
               regexp = RegexConstants.COMMON_ID_PATTERN,
               message = "The question ID must contain numeric characters only")
           String questionId,
-      @Valid @RequestBody QuestionPayload payload);
+      @Valid @RequestBody AdminQuestionPayload payload);
 
   @GetMapping("/random-question")
-  ResponseEntity<QuestionResponse> getRandomQuestion();
+  ResponseEntity<AdminQuestionResponse> getRandomQuestion();
 
   @GetMapping("/next-question")
-  ResponseEntity<QuestionResponse> getNextQuestionInGroup(
+  ResponseEntity<AdminQuestionResponse> getNextQuestionInGroup(
       @RequestParam("currentQuestionId")
           @NotBlank(message = "The current question ID is required")
           @Pattern(
@@ -60,7 +61,7 @@ public interface QuestionAPI {
       @RequestParam("getCurrent") boolean getCurrent);
 
   @GetMapping("/next-favorite-question")
-  ResponseEntity<QuestionResponse> getNextFavoriteQuestion(
+  ResponseEntity<AdminQuestionResponse> getNextFavoriteQuestion(
       @RequestParam("currentQuestionId")
           @NotBlank(message = "The current question ID is required")
           @Pattern(
@@ -80,7 +81,7 @@ public interface QuestionAPI {
       @Valid @RequestBody CheckAnswerPayload payload);
 
   @GetMapping("/get-for-user/group/{groupId}")
-  ResponseEntity<List<UserQuestionResponse>> getQuestionsByGroupForUser(
+  ResponseEntity<List<UserAdminQuestionResponse>> getQuestionsByGroupForUser(
       @PathVariable("groupId")
           @NotBlank(message = "The group ID is required")
           @Pattern(
@@ -99,5 +100,41 @@ public interface QuestionAPI {
       @Valid @RequestBody SetFavoritePayload payload);
 
   @GetMapping("/get-for-user/favorite")
-  ResponseEntity<List<UserQuestionResponse>> getFavoriteQuestionsForUser();
+  ResponseEntity<List<UserAdminQuestionResponse>> getFavoriteQuestionsForUser();
+
+  @PostMapping("/user-questions")
+  ResponseEntity<FullUserQuestionResponse> addUserQuestion(
+      @Valid @RequestBody BaseQuestionPayload payload);
+
+  @PutMapping("/user-questions/{questionId}")
+  ResponseEntity<FullUserQuestionResponse> updateUserQuestion(
+      @PathVariable("questionId")
+          @NotBlank(message = "The question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The question ID must contain numeric characters only")
+          String questionId,
+      @Valid @RequestBody BaseQuestionPayload payload);
+
+  @DeleteMapping("/user-questions/{questionId}")
+  ResponseEntity<DynamicResponse> deleteUserQuestion(
+      @PathVariable("questionId")
+          @NotBlank(message = "The question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The question ID must contain numeric characters only")
+          String questionId);
+
+  @GetMapping("/user-questions")
+  ResponseEntity<List<BriefUserQuestionResponse>> getUserQuestionsForUser();
+
+  @GetMapping("/user-questions/next-user-question")
+  ResponseEntity<FullUserQuestionResponse> getNextUserQuestion(
+      @RequestParam("currentQuestionId")
+          @NotBlank(message = "The current question ID is required")
+          @Pattern(
+              regexp = RegexConstants.COMMON_ID_PATTERN,
+              message = "The current question ID must contain numeric characters only")
+          String currentQuestionId,
+      @RequestParam("getCurrent") boolean getCurrent);
 }
