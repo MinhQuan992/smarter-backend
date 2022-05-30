@@ -1,6 +1,7 @@
 package com.example.smarterbackend.controller;
 
 import com.example.smarterbackend.framework.api.UserAPI;
+import com.example.smarterbackend.framework.dto.user.ChangeProfilePayload;
 import com.example.smarterbackend.framework.dto.user.UserResponse;
 import com.example.smarterbackend.framework.dto.user.AddUserPayload;
 import com.example.smarterbackend.framework.dto.DynamicResponse;
@@ -29,5 +30,10 @@ public class UserController implements UserAPI {
   @Override
   public ResponseEntity<UserResponse> getCurrentUser() {
     return ResponseEntity.ok(userService.getCurrentUserDTO());
+  }
+
+  @Override
+  public ResponseEntity<UserResponse> changeProfile(ChangeProfilePayload payload) {
+    return ResponseEntity.ok(userService.changeProfile(payload));
   }
 }

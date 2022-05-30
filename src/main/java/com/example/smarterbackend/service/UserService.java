@@ -1,9 +1,12 @@
 package com.example.smarterbackend.service;
 
+import com.example.smarterbackend.exception.InvalidRequestException;
 import com.example.smarterbackend.exception.NotFoundException;
 import com.example.smarterbackend.exception.OtpException;
 import com.example.smarterbackend.exception.ResourceConflictException;
+import com.example.smarterbackend.framework.common.data.Gender;
 import com.example.smarterbackend.framework.common.data.Role;
+import com.example.smarterbackend.framework.dto.user.ChangeProfilePayload;
 import com.example.smarterbackend.framework.dto.user.UserResponse;
 import com.example.smarterbackend.framework.dto.user.AddUserPayload;
 import com.example.smarterbackend.framework.dto.DynamicResponse;
@@ -17,9 +20,12 @@ import com.example.smarterbackend.repository.UserRepository;
 import com.example.smarterbackend.util.UserUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +48,6 @@ public class UserService {
     validateEmail(email);
     int otp = otpService.generateOTP(email);
 
-    log.info("Sending email to {}", email);
     String mailSubject = "Smarter | Verification Code to Sign Up";
     String mailContent =
         "<!DOCTYPE html><html><head><style>p, h2 {font-family: sans-serif;}</style></head>\n"
@@ -57,7 +62,6 @@ public class UserService {
             + "<p>Thanks for joining Smarter! We hope you will enjoy great moments with us!</p>\n"
             + "<p style=\"font-weight: bold;\">The Smarter Team</p></body></html>";
     sendMail(email, mailSubject, mailContent);
-    log.info("Sent email to {} successfully", email);
     log.info("Generated OTP: {}", otp);
 
     DynamicResponse response = new DynamicResponse();
@@ -84,7 +88,13 @@ public class UserService {
     mail.setMailSubject(subject);
     mail.setMailContent(content);
 
-    mailService.sendEmail(mail);
+    try {
+      log.info("Sending email to {}", receiverMail);
+      mailService.sendEmail(mail);
+      log.info("Sent email to {} successfully", receiverMail);
+    } catch (Exception ex) {
+      log.error("An exception has occurred while sending email to user", ex);
+    }
   }
 
   public UserResponse addUser(AddUserPayload payload) {
@@ -127,5 +137,40 @@ public class UserService {
     return userRepository
         .findUsersByEmail(email)
         .orElseThrow(() -> new NotFoundException("User not found"));
+  }
+
+  public UserResponse changeProfile(ChangeProfilePayload payload) {
+    User currentUser = getCurrentUser();
+
+    validateAndSavePassword(currentUser, payload.getNewPassword(), payload.getConfirmedPassword());
+
+    currentUser.setName(payload.getName());
+
+    if (StringUtils.isNotEmpty(payload.getImageUrl())) {
+      currentUser.setImageUrl(payload.getImageUrl());
+    }
+
+    if (StringUtils.isNotEmpty(payload.getGender())) {
+      currentUser.setGender(Gender.fromGenderString(payload.getGender()));
+    }
+
+    if (StringUtils.isNotEmpty(payload.getBirthdate())) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      LocalDate birthDate = LocalDate.parse(payload.getBirthdate(), formatter);
+      currentUser.setDateOfBirth(birthDate);
+    }
+
+    return UserMapper.INSTANCE.userToUserDTO(userRepository.save(currentUser));
+  }
+
+  private void validateAndSavePassword(User user, String newPassword, String confirmedPassword) {
+    if (StringUtils.isNotEmpty(newPassword) && StringUtils.isNotEmpty(confirmedPassword)) {
+      if (!newPassword.equals(confirmedPassword)) {
+        throw new InvalidRequestException("Mật khẩu không khớp");
+      }
+      user.setPassword(passwordEncoder.encode(newPassword));
+    } else if (StringUtils.isNotEmpty(newPassword) || StringUtils.isNotEmpty(confirmedPassword)) {
+      throw new InvalidRequestException("Bạn phải nhập đủ mật khẩu mới và xác nhận mật khẩu mới");
+    }
   }
 }
