@@ -46,6 +46,15 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.BAD_REQUEST);
   }
 
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  @ExceptionHandler(UnauthorizedException.class)
+  public ResponseEntity<ErrorMessage> unauthorizedException(Exception exception) {
+    if (exception.getMessage() == null) {
+      return null;
+    }
+    return new ResponseEntity<>(new ErrorMessage(exception.getMessage()), HttpStatus.UNAUTHORIZED);
+  }
+
   @ResponseStatus(HttpStatus.FORBIDDEN)
   @ExceptionHandler(ForbiddenException.class)
   public ResponseEntity<ErrorMessage> forbiddenException(Exception exception) {

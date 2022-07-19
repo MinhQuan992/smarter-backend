@@ -1,6 +1,6 @@
 package com.example.smarterbackend.service;
 
-import com.example.smarterbackend.exception.ForbiddenException;
+import com.example.smarterbackend.exception.UnauthorizedException;
 import com.example.smarterbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +17,6 @@ public class CustomUserDetailsService implements UserDetailsService {
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     return userRepository
         .findUsersByEmail(username)
-        .orElseThrow(ForbiddenException::new);
+        .orElseThrow(UnauthorizedException::new);
   }
 }
